@@ -26,7 +26,7 @@ pipeline {
             steps {
                 script {
                     build_docker_image(
-                        imageName: 'clearcut_backend_beta',
+                        imageName: 'debjyoti08/clearcut_backend_beta',
                         imageTag: params.BACKEND_IMAGE_TAG,
                         dockerfile: 'backend/Dockerfile',
                         context: 'backend'
@@ -39,7 +39,7 @@ pipeline {
             steps {
                 script {
                     build_docker_image(
-                        imageName: 'clearcut_frontend_beta',
+                        imageName: 'debjyoti08/clearcut_frontend_beta',
                         imageTag: params.FRONTEND_IMAGE_TAG,
                         dockerfile: 'frontend/Dockerfile',
                         context: 'frontend'
@@ -52,7 +52,7 @@ pipeline {
             steps {
                 script {
                     push_docker_image(
-                        imageName: 'clearcut_backend_beta',
+                        imageName: 'debjyoti08/clearcut_backend_beta',
                         imageTag: params.BACKEND_IMAGE_TAG,
                         credentials: 'docker-hub-credentials'
                     )
@@ -64,7 +64,7 @@ pipeline {
             steps {
                 script {
                     push_docker_image(
-                        imageName: 'clearcut_frontend_beta',
+                        imageName: 'debjyoti08/clearcut_frontend_beta',
                         imageTag: params.FRONTEND_IMAGE_TAG,
                         credentials: 'docker-hub-credentials'
                     )
