@@ -1,22 +1,35 @@
 // -----------------------------------------------------------------------------
 // Maintained by: Debjyoti Shit
-// Description: Update the Kubernetes manifests with the new image tag only.
+// Description: Update the Kubernetes manifests with the new image tag.
 // -----------------------------------------------------------------------------
 
 def call(Map config = [:]) {
     def replacements = config.replacements ?: error("[ERROR] 'replacements' map is required")
     def manifestsPath = config.manifestsPath ?: 'k8s'
 
-    echo "[INFO] Updating Kubernetes image tags in manifests: ${replacements}"
+    echo "[INFO] Updating Kubernetes image tags: ${replacements}"
 
     replacements.each { imageName, newTag ->
-        echo "[INFO] Replacing tag for image: ${imageName}→${newTag}"
+        echo "[INFO] Replacing tag for image: ${imageName} → ${newTag}"
+
+        sh """
+            echo "[DEBUG] Files containing ${imageName}:"
+            find ${manifestsPath} -type f -name '*.yaml' -exec grep -l '${imageName}' {} \\
+        """
 
         sh """
             find ${manifestsPath} -type f -name '*.yaml' -exec \\
-                sed -i -E 's|(image:\\\\s*)(${imageName}):([^ /]+)|\\\\1\\\\2:${newTag}|g' {} +
+                sed -i -E 's|(image:\s*)(${imageName}):([^ /]+)|\1\2:${newTag}|g' {} +
         """
     }
 
-    echo "[INFO] Manifest update complete. Please commit and push in pipeline script."
+    sh "git diff"
+
+    def hasChanges = sh(script: "git diff --quiet || echo changed", returnStdout: true).trim()
+
+    if (hasChanges == "changed") {
+        echo "[INFO] Changes detected. Manifests updated. Commit & push will happen in pipeline script."
+    } else {
+        echo "[INFO] No changes to commit. All image tags are already up-to-date."
+    }
 }
