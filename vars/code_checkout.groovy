@@ -3,7 +3,11 @@
 // Description: Clone the repository from the specified URL and branch using credentials.
 // -----------------------------------------------------------------------------
 
-def call(String url, String branch, String credentialsId = 'gitCredentials') {
+def call(Map args) {
+    def url = args.repoUrl
+    def branch = args.branch
+    def credentialsId = args.credentialsId ?: 'gitCredentials'
+
     echo "[INFO] Initiating Git checkout..."
 
     if (!url?.trim() || !branch?.trim()) {
