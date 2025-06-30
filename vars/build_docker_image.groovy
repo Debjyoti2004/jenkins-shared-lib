@@ -8,21 +8,12 @@ def call(Map config = [:]) {
     def imageTag = config.imageTag ?: 'latest'
     def dockerfile = config.dockerfile ?: 'Dockerfile'
     def context = config.context ?: '.'
+    def noCache = config.noCache ?: false
 
-    echo "[INFO] Building Docker image..."
-    echo "[INFO] Image Name   : ${imageName}"
-    echo "[INFO] Image Tag    : ${imageTag}"
-    echo "[INFO] Dockerfile   : ${dockerfile}"
-    echo "[INFO] Build Context: ${context}"
+    def noCacheFlag = noCache ? '--no-cache' : ''
 
-    try {
-        sh """
-            docker build -t ${imageName}:${imageTag} -t ${imageName}:latest -f ${dockerfile} ${context}
-        """
-        echo "[SUCCESS] Docker image '${imageName}:${imageTag}' built successfully."
-    } catch (error) {
-        echo "[ERROR] Docker build failed: ${error.message}"
-        currentBuild.result = 'FAILURE'
-        throw error
-    }
+    echo "[INFO] Building Docker image: ${imageName}:${imageTag} from ${dockerfile} (noCache: ${noCache})"
+    sh """
+        docker build ${noCacheFlag} -t ${imageName}:${imageTag} -f ${dockerfile} ${context}
+    """
 }
