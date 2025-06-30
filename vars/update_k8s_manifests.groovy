@@ -22,6 +22,7 @@ def call(Map config = [:]) {
             git config --global user.email "${gitUserEmail}"
         """
 
+        // Replace tags in all YAML files
         replacements.each { imageName, newTag ->
             echo "[INFO] Replacing tag for image: ${imageName} → ${newTag}"
 
@@ -36,7 +37,7 @@ def call(Map config = [:]) {
             """
         }
 
-        sh "git diff"
+        sh "git diff || true" // Show diff for logging
 
         def hasChanges = sh(script: "git diff --quiet || echo changed", returnStdout: true).trim()
 
@@ -45,9 +46,14 @@ def call(Map config = [:]) {
 
             sh """
                 git add ${manifestsPath}/*.yaml
-                git commit -m "[CI/CD] Updated image tags: ${replacements.collect{ k,v -> "$k:$v" }.join(', ')}"
+                git commit -m "[CI/CD] Updated image tags: ${replacements.collect { k, v -> "$k:$v" }.join(', ')}" || echo "[WARN] Nothing to commit"
+                
                 git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/DebjyotiShit/ClearCut.git
-                git pull --rebase origin master
+
+                echo "[INFO] Pulling latest changes to avoid push rejection..."
+                git pull --no-rebase --no-edit origin master || echo "[WARN] Pull failed. Check manually if needed."
+
+                echo "[INFO] Pushing updated manifests..."
                 git push origin HEAD:master
             """
         } else {
