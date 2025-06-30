@@ -1,63 +1,22 @@
 // -----------------------------------------------------------------------------
 // Maintained by: Debjyoti Shit
-// Description: Update the Kubernetes manifests with the new image tag.
+// Description: Update the Kubernetes manifests with the new image tag only.
 // -----------------------------------------------------------------------------
 
 def call(Map config = [:]) {
     def replacements = config.replacements ?: error("[ERROR] 'replacements' map is required")
     def manifestsPath = config.manifestsPath ?: 'k8s'
-    def gitCredentials = config.gitCredentials ?: 'github-credentials'
-    def gitUserName = config.gitUserName ?: 'Jenkins CI'
-    def gitUserEmail = config.gitUserEmail ?: 'jenkins@example.com'
 
-    echo "[INFO] Updating Kubernetes image tags: ${replacements}"
+    echo "[INFO] Updating Kubernetes image tags in manifests: ${replacements}"
 
-    withCredentials([usernamePassword(
-        credentialsId: gitCredentials,
-        usernameVariable: 'GIT_USERNAME',
-        passwordVariable: 'GIT_PASSWORD'
-    )]) {
+    replacements.each { imageName, newTag ->
+        echo "[INFO] Replacing tag for image: ${imageName}→${newTag}"
+
         sh """
-            git config --global user.name "${gitUserName}"
-            git config --global user.email "${gitUserEmail}"
+            find ${manifestsPath} -type f -name '*.yaml' -exec \\
+                sed -i -E 's|(image:\\\\s*)(${imageName}):([^ /]+)|\\\\1\\\\2:${newTag}|g' {} +
         """
-
-        // Replace tags in all YAML files
-        replacements.each { imageName, newTag ->
-            echo "[INFO] Replacing tag for image: ${imageName} → ${newTag}"
-
-            sh """
-                echo "[DEBUG] Files containing ${imageName}:"
-                find ${manifestsPath} -type f -name '*.yaml' -exec grep -l '${imageName}' {} \\;
-            """
-
-            sh """
-                find ${manifestsPath} -type f -name '*.yaml' -exec \\
-                    sed -i -E 's|(image:\\s*)(${imageName}):([^ /]+)|\\1\\2:${newTag}|g' {} +
-            """
-        }
-
-        sh "git diff || true" // Show diff for logging
-
-        def hasChanges = sh(script: "git diff --quiet || echo changed", returnStdout: true).trim()
-
-        if (hasChanges == "changed") {
-            echo "[INFO] Changes detected. Committing and pushing..."
-
-            sh """
-                git add ${manifestsPath}/*.yaml
-                git commit -m "[CI/CD] Updated image tags: ${replacements.collect { k, v -> "$k:$v" }.join(', ')}" || echo "[WARN] Nothing to commit"
-                
-                git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/DebjyotiShit/ClearCut.git
-
-                echo "[INFO] Pulling latest changes to avoid push rejection..."
-                git pull --no-rebase --no-edit origin master || echo "[WARN] Pull failed. Check manually if needed."
-
-                echo "[INFO] Pushing updated manifests..."
-                git push origin HEAD:master
-            """
-        } else {
-            echo "[INFO] No changes to commit. All image tags are already up-to-date."
-        }
     }
+
+    echo "[INFO] Manifest update complete. Please commit and push in pipeline script."
 }
