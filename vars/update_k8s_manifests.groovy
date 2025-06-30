@@ -46,7 +46,8 @@ def call(Map config = [:]) {
             sh """
                 git add ${manifestsPath}/*.yaml
                 git commit -m "[CI/CD] Updated image tags: ${replacements.collect{ k,v -> "$k:$v" }.join(', ')}"
-                git remote set-url origin https://$GIT_USERNAME:$GIT_PASSWORD@github.com/DebjyotiShit/ClearCut.git
+                git remote set-url origin https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/DebjyotiShit/ClearCut.git
+                git pull --rebase origin master
                 git push origin HEAD:master
             """
         } else {
