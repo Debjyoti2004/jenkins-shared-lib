@@ -8,6 +8,13 @@
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout(true)
+        timestamps()
+        timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
+    }
+
     parameters {
         string(name: 'BACKEND_IMAGE_TAG', defaultValue: '', description: 'Tag for backend Docker image')
         string(name: 'FRONTEND_IMAGE_TAG', defaultValue: '', description: 'Tag for frontend Docker image')
