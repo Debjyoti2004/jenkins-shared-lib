@@ -12,14 +12,15 @@ def call(Map config = [:]) {
     replacements.each { imageName, newTag ->
         echo "[INFO] Replacing tag for image: ${imageName} → ${newTag}"
 
+        // 🛠 FIX: missing `+` in the -exec grep command caused silent failure
         sh """
             echo "[DEBUG] Files containing ${imageName}:"
-            find ${manifestsPath} -type f -name '*.yaml' -exec grep -l '${imageName}' {} \\
+            find ${manifestsPath} -type f -name '*.yaml' -exec grep -l '${imageName}' {} +
         """
 
         sh """
             find ${manifestsPath} -type f -name '*.yaml' -exec \\
-                sed -i -E 's|(image:\s*)(${imageName}):([^ /]+)|\1\2:${newTag}|g' {} +
+                sed -i -E 's|(image:\\s*)(${imageName}):([^ /]+)|\\1\\2:${newTag}|g' {} +
         """
     }
 
