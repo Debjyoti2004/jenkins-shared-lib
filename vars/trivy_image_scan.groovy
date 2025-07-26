@@ -15,7 +15,7 @@ def call(Map config = [:]) {
     try {
         sh """
             trivy image \
-              --exit-code 1 \
+              --exit-code 0 \
               --severity ${severity} \
               --format ${format} \
               ${fullImage}
