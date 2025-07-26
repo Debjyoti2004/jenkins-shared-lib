@@ -5,7 +5,7 @@
 def call() {
     echo "[INFO] Waiting for SonarQube Quality Gate result..."
 
-    timeout(time: 1, unit: 'MINUTES') {
+    timeout(time: 5, unit: 'MINUTES') {
         waitForQualityGate abortPipeline: false
     }
 
